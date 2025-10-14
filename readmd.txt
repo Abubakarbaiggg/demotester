@@ -1,0 +1,114 @@
+
+Get all users who have placed more than 5 completed orders.
+
+	*)SELECT u.name,count(o.id) as total_order FROM users u JOIN orders o ON u.id = o.user_id WHERE o.order_status = 'completed' 
+        GROUP by u.id,u.name having total_order >= 7;
+
+    class User{
+	 public function orders(){
+	   return $this->hasMany(Order::class);
+	 }
+	}
+	
+    class Order{
+	 public function user(){
+	  return $this->belongto(Order::class);
+	 }
+	}
+	
+    User::select('users.id','users.name',DB::raw('count(orders.id) as total_order'))->with('orders'=>function($query){
+	    $query->where('order_status','completed');
+	})->groupBy(['id','name'])->having('total_order','>=',7)->get();
+	
+	*)Order::with('user',[name])->select('count(id) as total_order')->where('order_status','=','completed')
+	 ->groupBy(['id','u.name'])->having('total_order','>=',7)->get();
+
+	*)Order::JOIN('users','orders.user_id','=','users.id')->
+        select('users.name',DB::raw('COUNT(orders.id) as total_order'))->where('orders.order_status','completed')->
+        groupBy('users.id','users.name')->having('total_order', '>=', 7)->get();
+
+	*)DB::table('orders')->join('users','orders.user_id','=','users.id')->
+        select('users.name',DB::raw('COUNT(orders.id) as total_order'))->where('orders.order_status','completed')->
+        groupBy('users.id','users.name')->having('total_order','>=' 7)->get();
+
+	*)DB::table('orders')->join('users','orders.user_id' ,'= ',users.id')->
+        selectRaw('users.name,COUNT(orders.id) as total_order')->where('orders.order_status','completed')->
+        groupByRaw('users.id , users.name')->havingRaw('total_order >= 7')->get();
+
+Find the top 3 products with the highest total quantity ordered.
+        
+    *)select p.name,count(oi.product_id) as highest_order from order_items oi join orders o on o.id = oi.order_id 
+    join products p on p.id = oi.product_id group by p.name order by highest_order DESC  limit 3;
+
+	*)Order_items::join('orders','orders.id','=','order_items.order_id')->join('products','products.id','=','order_items.product_id')->
+    select('products.name',DB::raw('COUNT(order_items.product_id) as highest_orders'))->groupBy('products.name')->orderByDesc('highest_orders')->
+	limit(3)->get();
+        
+    *)DB::table('order_items as oi')->join('orders o','o.id','=','oi.order_id')->join('products as p','p.id','=','oi.product_id')->
+	select('p.name',DB::raw('COUNT(oi.product_id) as highest_orders'))->groupBy('p.name')->orderByDesc('highest_orders')->limit(3)->get();
+
+	*)DB::table('order_items as oi')->join('orders o','o.id','=','oi.order_id')->join('products as p','p.id','=','oi.product_id')->
+	selectRaw('p.name,COUNT(oi.product_id) as highest_orders')->groupBy('p.name')->orderByDesc('highest_orders')->limit(3)->get();
+
+
+Show each user's total number of pending and completed orders.
+
+    *)select u.name,sum(case when o.order_status = "completed" then 1 else 0 end ) as Completed ,
+	sum(case when o.order_status = "pending" then 1 else 0 end) as Pending from users u join 
+	orders o on u.id = o.user_id  group by u.name
+	
+	*)User::join('orders','orders.user_id','=','users.id')->selectRaw("users.name,
+	SUM(CASE WHEN orders.order_status = 'completed' then 1 else 0 end ) as completed,
+	SUM(CASE WHEN orders.order_status = 'pending' then 1 else 0 end ) as pending")->groupBy('users.name')->get();
+	 
+	*)DB::table('users as u')->join('orders as o','o.user_id','=','u.id')->selectRaw("u.name,
+	SUM(CASE WHEN o.order_status = 'completed' then 1 else 0 end) as completed,
+	SUM(CASE WHEN o.order_status = 'pending' then 1 else 0 end) as pending)->groupBy('u.name')->get();
+
+List products that have never been ordered.
+
+	*)SELECT p.* FROM products p LEFT JOIN order_items oi ON p.id = oi.product_id WHERE oi.product_id IS NULL;
+	
+	class product{
+	 public function orderItems(){
+	   return $this->hasMany(order_items::class);
+	 }
+	}
+	
+	Product::with('orderItems' => function($query){
+		$query->where('product_id','!=',null);
+	})->get();
+	
+	Product::doesntHave('orderItems')->get();
+ 
+Get all orders placed in the last 7 days.
+
+Find the average order quantity for each product.
+
+Retrieve users who have ordered products from more than one category.
+
+Show total revenue generated from each product.
+
+List users who ordered “Black” products only.
+
+Find the most frequently ordered product color.
+
+Get all orders where quantity > average quantity of all orders.
+
+Retrieve the user with the earliest order date.
+
+Show product names along with their total ordered quantities.
+
+Find the total number of orders placed by users under age 20.
+
+Display each category’s total number of products and total stock.
+
+Get all users who have ordered at least one “pending” and one “completed” order.
+
+List all orders with their product names, user names, and status.
+
+Find users whose total ordered quantity exceeds 15.
+
+Get total revenue grouped by category and subcategory.
+
+Show the latest order date for each user.
